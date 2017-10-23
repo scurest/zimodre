@@ -1,5 +1,7 @@
 const io = @import("std").io;
 
+const byteorder = @import("byteorder.zig");
+
 error ParseErrorUnexpectedEOF;
 
 pub const Parser = struct {
@@ -98,10 +100,9 @@ pub fn View(comptime T: type) -> type {
             if (T == u8) {
                 self.buffer[n]
             } else if (T == u16) {
-                u16(self.buffer[2*n]) | (u16(self.buffer[2*n+1]) << 8)
+                byteorder.read_u16(self.buffer[2*n..2*n+2])
             } else if (T == u32) {
-                u32(self.buffer[4*n]) | (u32(self.buffer[4*n+1]) << 8) |
-                    (u32(self.buffer[4*n+2]) << 16) | (u32(self.buffer[4*n+3]) << 24)
+                byteorder.read_u32(self.buffer[4*n..4*n+4])
             } else {
                 @compileError("unsupported type: " ++ @typeName(T));
             }

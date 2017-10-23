@@ -4,6 +4,7 @@ const Buffer = @import("std").Buffer;
 
 const mod = @import("mod.zig");
 const Mod = mod.Mod;
+const byteorder = @import("byteorder.zig");
 
 error ValidateNotEnoughVertexData;
 error ValidateNotEnoughFaceData;
@@ -134,14 +135,12 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
     const index_data = m.file[f_start..f_end];
     const indices_start = gltf.buffer.len();
     { var i: usize = 0; while (i != mi.index_count) : (i += 1) {
-        // Horrible hack
-        const d = index_data[2*i..2*(i+1)];
-        var x = u16(d[0]) | (u16(d[1]) << 8);
-        x -= u16(mi.vertex_start);
-        %%gltf.buffer.appendByte(@truncate(u8, x));
-        %%gltf.buffer.appendByte(@truncate(u8, x >> 8));
+        const index =
+            byteorder.read_u16(index_data[2*i..2*i+2]) - u16(mi.vertex_start);
+        %%byteorder.write_u16(&gltf.buffer, index);
     }}
     const indices_end = gltf.buffer.len();
+
     // Since shorts are 2 bytes, we might not be aligned to 4 anymore.
     if (gltf.buffer.len() % 4 != 0) {
         %%gltf.buffer.appendByteNTimes(0, 4 - gltf.buffer.len() % 4);

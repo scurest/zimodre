@@ -1,6 +1,7 @@
 const std = @import("std");
 const Buffer = std.Buffer;
 
+const byteorder = @import("byteorder.zig");
 const Json = @import("json.zig").Json;
 const GlTF = @import("mod2gltf.zig").GlTF;
 const AccessorFormat = @import("mod2gltf.zig").AccessorFormat;
@@ -24,15 +25,18 @@ pub fn write_glb(gltf: &const GlTF) -> %Buffer {
     var glb = %%Buffer.initSize(&std.mem.c_allocator, 0);
     %defer glb.deinit();
 
+    // Header
     %%glb.append("glTF"); // magic
-    writeLE(&glb, 2) ; // version
-    writeLE(&glb, u32(total_len)); // total length
+    %%byteorder.write_u32(&glb, 2) ; // version
+    %%byteorder.write_u32(&glb, u32(total_len)); // total length
 
-    writeLE(&glb, u32(gltf_buf.len())); // JSON chunk
+    // JSON chunk
+    %%byteorder.write_u32(&glb, u32(gltf_buf.len()));
     %%glb.append("JSON");
     %%glb.append(gltf_buf.toSliceConst());
 
-    writeLE(&glb, u32(gltf.buffer.len())); // BIN chunk
+    // BIN chunk
+    %%byteorder.write_u32(&glb, u32(gltf.buffer.len()));
     %%glb.append("BIN\x00");
     %%glb.append(gltf.buffer.toSliceConst());
 
@@ -153,11 +157,4 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
     j.end_obj();
 
     b
-}
-
-fn writeLE(b: &Buffer, x: u32) {
-    %%b.appendByte(@truncate(u8, x));
-    %%b.appendByte(@truncate(u8, x >> 8));
-    %%b.appendByte(@truncate(u8, x >> 16));
-    %%b.appendByte(@truncate(u8, x >> 24));
 }
