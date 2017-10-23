@@ -20,7 +20,7 @@ pub const Parser = struct {
     }
 
     pub fn end(self: &Parser) {
-        self.log("\n");
+        self.log("------\n");
     }
 
     pub fn check_size(self: &Parser, count: usize) -> %void {
@@ -30,11 +30,9 @@ pub const Parser = struct {
     }
 
     fn check_alignment(self: &Parser, align_to: usize) {
-        if (self.logging_on) {
-            if (self.pos % align_to != 0) {
-                self.warn("expected 0x{x} to be aligned to {} bytes\n",
-                    self.pos, align_to);
-            }
+        if (self.pos % align_to != 0) {
+            self.warn("expected 0x{x} to be aligned to {} bytes\n",
+                self.pos, align_to);
         }
     }
 
