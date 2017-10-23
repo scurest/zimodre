@@ -115,10 +115,11 @@ fn log_view(ctx: &Parser, comptime T: type, view: &const View(T)) {
     const num = if (view_len > 10) { 8 } else { view_len };
     ctx.log("[");
     { var i: usize = 0; while (i != num) : (i += 1) {
-        ctx.log("{}, ", view.nth(i));
+        ctx.log("{}", view.nth(i));
+        if (i + 1 != view_len) { ctx.log(", "); }
     }}
     if (num < view_len) {
-        ctx.log("... and {} more", view_len - num);
+        ctx.log("...and {} more", view_len - num);
     }
     ctx.log("]");
 }
