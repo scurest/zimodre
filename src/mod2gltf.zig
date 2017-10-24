@@ -21,7 +21,11 @@ pub const Accessor = struct {
     buffer_end: usize,
     count: u32,
     format: AccessorFormat,
-    //TODO min/max for position
+    /// Only for position; minimum of each coordinate
+    /// (required by glTF).
+    min: ?[3]f32,
+    /// Only for position; maximum of each coordinate.
+    max: ?[3]f32,
 };
 
 pub const Mesh = struct {
@@ -98,10 +102,31 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
     //TODO we know all the sizes in advance; resize at the beginning
     // and make one pass copying the data over.
     const positions_start = gltf.buffer.len();
+    var min: ?[3]f32 = null;
+    var max: ?[3]f32 = null;
     { var i: usize = 0; while (i != mi.vertex_count) : (i += 1) {
         const attrib = data[28*i..28*(i+1)];
         const xyz = attrib[0..12];
         %%gltf.buffer.append(xyz);
+
+        // Find min/max
+        const x = byteorder.read_f32(xyz[0..4]);
+        const y = byteorder.read_f32(xyz[4..8]);
+        const z = byteorder.read_f32(xyz[8..12]);
+        if (min) |*v| {
+            if (x < (*v)[0]) { (*v)[0] = x; }
+            else if (y < (*v)[1]) { (*v)[1] = y; }
+            else if (z < (*v)[2]) { (*v)[2] = z; }
+        } else {
+            min = []f32 {x, y, z};
+        }
+        if (max) |*v| {
+            if (x > (*v)[0]) { (*v)[0] = x; }
+            else if (y > (*v)[1]) { (*v)[1] = y; }
+            else if (z > (*v)[2]) { (*v)[2] = z; }
+        } else {
+            max = []f32 {x, y, z};
+        }
     }}
     const positions_end = gltf.buffer.len();
 
@@ -121,6 +146,8 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
         .buffer_end = positions_end,
         .count = mi.vertex_count,
         .format = AccessorFormat.F32F32F32,
+        .min = min,
+        .max = max,
     });
     const uv_accessor_id = gltf.accessors.len;
     %%gltf.accessors.append(Accessor {
@@ -128,6 +155,8 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
         .buffer_end = uvs_end,
         .count = mi.vertex_count,
         .format = AccessorFormat.F32F32,
+        .min = null,
+        .max = null,
     });
 
     const f_start = m.index_offset + 2 * mi.index_pos;
@@ -152,6 +181,8 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
         .buffer_end = indices_end,
         .count = mi.index_count,
         .format = AccessorFormat.U16,
+        .min = null,
+        .max = null,
     });
 
     %%gltf.meshes.append(Mesh {

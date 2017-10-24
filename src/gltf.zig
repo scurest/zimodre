@@ -97,6 +97,22 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
                 AccessorFormat.F32F32F32 => j.val(i32(5126)),
                 AccessorFormat.U16 => j.val(i32(5123)),
             }
+            if (a.min) |min| {
+                j.prop("min");
+                j.begin_array();
+                j.val(min[0]);
+                j.val(min[1]);
+                j.val(min[2]);
+                j.end_array();
+            }
+            if (a.max) |max| {
+                j.prop("max");
+                j.begin_array();
+                j.val(max[0]);
+                j.val(max[1]);
+                j.val(max[2]);
+                j.end_array();
+            }
             j.prop("count");
             j.val(a.count);
             j.end_obj();
