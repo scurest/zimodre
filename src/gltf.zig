@@ -3,11 +3,11 @@ const Buffer = std.Buffer;
 
 const byteorder = @import("byteorder.zig");
 const Json = @import("json.zig").Json;
-const GlTF = @import("mod2gltf.zig").GlTF;
-const AccessorFormat = @import("mod2gltf.zig").AccessorFormat;
+const Model = @import("mod2model.zig").Model;
+const AccessorFormat = @import("mod2model.zig").AccessorFormat;
 
-pub fn write_glb(gltf: &const GlTF) -> %Buffer {
-    var gltf_buf = %return write_gltf(gltf);
+pub fn write_glb(model: &const Model) -> %Buffer {
+    var gltf_buf = %return write_gltf(model);
     defer gltf_buf.deinit();
 
     if (gltf_buf.len() % 4 != 0) {
@@ -19,7 +19,7 @@ pub fn write_glb(gltf: &const GlTF) -> %Buffer {
         8 + // JSON chunk header
         gltf_buf.len() + // JSON payload len
         8 + // BIN chunk header
-        gltf.buffer.len(); // BIN payload len
+        model.buffer.len(); // BIN payload len
 
 
     var glb = %%Buffer.initSize(&std.mem.c_allocator, 0);
@@ -36,14 +36,14 @@ pub fn write_glb(gltf: &const GlTF) -> %Buffer {
     %%glb.append(gltf_buf.toSliceConst());
 
     // BIN chunk
-    %%byteorder.write_u32(&glb, u32(gltf.buffer.len()));
+    %%byteorder.write_u32(&glb, u32(model.buffer.len()));
     %%glb.append("BIN\x00");
-    %%glb.append(gltf.buffer.toSliceConst());
+    %%glb.append(model.buffer.toSliceConst());
 
     glb
 }
 
-fn write_gltf(gltf: &const GlTF) -> %Buffer {
+fn write_gltf(model: &const Model) -> %Buffer {
     var b = %%Buffer.initSize(&std.mem.c_allocator, 0);
     %defer b.deinit();
 
@@ -60,14 +60,14 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
     j.begin_array();
         j.begin_obj();
         j.prop("byteLength");
-        j.val(gltf.buffer.len());
+        j.val(model.buffer.len());
         j.end_obj();
     j.end_array();
-    if (gltf.accessors.len != 0) {
+    if (model.accessors.len != 0) {
         j.prop("bufferViews");
         j.begin_array();
-        { var i:usize = 0; while (i != gltf.accessors.len) : (i += 1) {
-            const a = &gltf.accessors.items[i];
+        { var i:usize = 0; while (i != model.accessors.len) : (i += 1) {
+            const a = &model.accessors.items[i];
             j.begin_obj();
             j.prop("buffer");
             j.val(i32(0));
@@ -80,8 +80,8 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
         j.end_array();
         j.prop("accessors");
         j.begin_array();
-        { var i:usize = 0; while (i != gltf.accessors.len) : (i += 1) {
-            const a = &gltf.accessors.items[i];
+        { var i:usize = 0; while (i != model.accessors.len) : (i += 1) {
+            const a = &model.accessors.items[i];
             j.begin_obj();
             j.prop("bufferView");
             j.val(i);
@@ -119,11 +119,11 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
         }}
         j.end_array();
     }
-    if (gltf.meshes.len != 0) {
+    if (model.meshes.len != 0) {
         j.prop("meshes");
         j.begin_array();
-        { var i:usize = 0; while (i != gltf.meshes.len) : (i += 1) {
-            const m = &gltf.meshes.items[i];
+        { var i:usize = 0; while (i != model.meshes.len) : (i += 1) {
+            const m = &model.meshes.items[i];
             j.begin_obj();
             j.prop("primitives");
                 j.begin_array();
@@ -148,8 +148,8 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
         j.end_array();
         j.prop("nodes");
         j.begin_array();
-        { var i:usize = 0; while (i != gltf.meshes.len) : (i += 1) {
-            const m = &gltf.meshes.items[i];
+        { var i:usize = 0; while (i != model.meshes.len) : (i += 1) {
+            const m = &model.meshes.items[i];
             j.begin_obj();
             j.prop("mesh");
             j.val(i);
@@ -161,7 +161,7 @@ fn write_gltf(gltf: &const GlTF) -> %Buffer {
             j.begin_obj();
             j.prop("nodes");
                 j.begin_array();
-                { var i:usize = 0; while (i != gltf.meshes.len) : (i += 1) {
+                { var i: usize = 0; while (i != model.meshes.len) : (i += 1) {
                     j.val(i);
                 }}
                 j.end_array();

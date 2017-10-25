@@ -4,7 +4,7 @@ const Buffer = @import("std").Buffer;
 
 const mod = @import("mod.zig");
 const Parser = @import("parser.zig").Parser;
-const mod2gltf = @import("mod2gltf.zig");
+const mod2model = @import("mod2model.zig");
 const gltf = @import("gltf.zig");
 
 error CLIBadArguments;
@@ -88,10 +88,10 @@ fn main2() -> %void {
     var mod_file = %return mod.parse(&parser);
     defer mod_file.deinit();
 
-    var g = %return mod2gltf.convert(&mod_file);
-    defer g.deinit();
+    var model = %return mod2model.convert(&mod_file);
+    defer model.deinit();
 
-    var glb_buffer = %return gltf.write_glb(&g);
+    var glb_buffer = %return gltf.write_glb(&model);
     defer glb_buffer.deinit();
 
     if (!dry_run) {

@@ -36,44 +36,44 @@ pub const Mesh = struct {
 
 /// Intermediate model representation that's very close to a glTF file.
 /// Should be really easy to emit a GLB once you have this.
-pub const GlTF = struct {
+pub const Model = struct {
     /// The GLB buffer holding glTF binary data.
     /// Must always be padded to a multiple of 4 bytes.
     buffer: Buffer,
     accessors: ArrayList(Accessor),
     meshes: ArrayList(Mesh),
 
-    pub fn init() -> GlTF {
-        GlTF {
+    pub fn init() -> Model {
+        Model {
             .buffer = %%Buffer.initSize(&mem.c_allocator, 0),
             .accessors = ArrayList.init(&mem.c_allocator),
             .meshes = ArrayList.init(&mem.c_allocator),
         }
     }
 
-    pub fn deinit(self: &GlTF) {
+    pub fn deinit(self: &Model) {
         self.buffer.deinit();
         self.accessors.deinit();
         self.meshes.deinit();
     }
 };
 
-pub fn convert(m: &const Mod) ->%GlTF {
-    var gltf = GlTF {
+pub fn convert(m: &const Mod) ->%Model {
+    var model = Model {
         .buffer = %%Buffer.initSize(&mem.c_allocator, 0),
         .accessors = ArrayList(Accessor).init(&mem.c_allocator),
         .meshes = ArrayList(Mesh).init(&mem.c_allocator),
     };
-    %defer gltf.deinit();
+    %defer model.deinit();
 
     { var i: usize = 0; while (i != m.mesh_info.len) : (i += 1) {
-        %return convert_mesh(&gltf, m, i);
+        %return convert_mesh(&model, m, i);
     }}
 
-    gltf
+    model
 }
 
-fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
+fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
     const mi = &m.mesh_info.items[id];
 
     const v_start = m.vertex_offset + mi.vertex_size * u32(mi.vertex_start);
@@ -101,13 +101,13 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
 
     //TODO we know all the sizes in advance; resize at the beginning
     // and make one pass copying the data over.
-    const positions_start = gltf.buffer.len();
+    const positions_start = model.buffer.len();
     var min: ?[3]f32 = null;
     var max: ?[3]f32 = null;
     { var i: usize = 0; while (i != mi.vertex_count) : (i += 1) {
         const attrib = data[28*i..28*(i+1)];
         const xyz = attrib[0..12];
-        %%gltf.buffer.append(xyz);
+        %%model.buffer.append(xyz);
 
         // Find min/max
         const x = byteorder.read_f32(xyz[0..4]);
@@ -128,20 +128,20 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
             max = []f32 {x, y, z};
         }
     }}
-    const positions_end = gltf.buffer.len();
+    const positions_end = model.buffer.len();
 
-    const uvs_start = gltf.buffer.len();
+    const uvs_start = model.buffer.len();
     { var i: usize = 0; while (i != mi.vertex_count) : (i += 1) {
         const attrib = data[28*i..28*(i+1)];
         const uv = attrib[16..24];
-        %%gltf.buffer.append(uv);
+        %%model.buffer.append(uv);
     }}
-    const uvs_end = gltf.buffer.len();
+    const uvs_end = model.buffer.len();
 
     //TODO handle joints and weights
 
-    const position_accessor_id = gltf.accessors.len;
-    %%gltf.accessors.append(Accessor {
+    const position_accessor_id = model.accessors.len;
+    %%model.accessors.append(Accessor {
         .buffer_start = positions_start,
         .buffer_end = positions_end,
         .count = mi.vertex_count,
@@ -149,8 +149,8 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
         .min = min,
         .max = max,
     });
-    const uv_accessor_id = gltf.accessors.len;
-    %%gltf.accessors.append(Accessor {
+    const uv_accessor_id = model.accessors.len;
+    %%model.accessors.append(Accessor {
         .buffer_start = uvs_start,
         .buffer_end = uvs_end,
         .count = mi.vertex_count,
@@ -162,21 +162,21 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
     const f_start = m.index_offset + 2 * mi.index_pos;
     const f_end = f_start + 2 * mi.index_count;
     const index_data = m.file[f_start..f_end];
-    const indices_start = gltf.buffer.len();
+    const indices_start = model.buffer.len();
     { var i: usize = 0; while (i != mi.index_count) : (i += 1) {
         const index =
             byteorder.read_u16(index_data[2*i..2*i+2]) - u16(mi.vertex_start);
-        %%byteorder.write_u16(&gltf.buffer, index);
+        %%byteorder.write_u16(&model.buffer, index);
     }}
-    const indices_end = gltf.buffer.len();
+    const indices_end = model.buffer.len();
 
     // Since shorts are 2 bytes, we might not be aligned to 4 anymore.
-    if (gltf.buffer.len() % 4 != 0) {
-        %%gltf.buffer.appendByteNTimes(0, 4 - gltf.buffer.len() % 4);
+    if (model.buffer.len() % 4 != 0) {
+        %%model.buffer.appendByteNTimes(0, 4 - model.buffer.len() % 4);
     }
 
-    const index_accessor_id = gltf.accessors.len;
-    %%gltf.accessors.append(Accessor {
+    const index_accessor_id = model.accessors.len;
+    %%model.accessors.append(Accessor {
         .buffer_start = indices_start,
         .buffer_end = indices_end,
         .count = mi.index_count,
@@ -185,7 +185,7 @@ fn convert_mesh(gltf: &GlTF, m: &const Mod, id: usize) -> %void {
         .max = null,
     });
 
-    %%gltf.meshes.append(Mesh {
+    %%model.meshes.append(Mesh {
         .positions = position_accessor_id,
         .uvs = uv_accessor_id,
         .indices = index_accessor_id,
