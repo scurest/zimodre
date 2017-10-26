@@ -1,3 +1,5 @@
+//! Parse .mod files into some structs.
+
 const std = @import("std");
 const ArrayList = std.ArrayList;
 

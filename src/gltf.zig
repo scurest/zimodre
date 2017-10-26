@@ -148,7 +148,7 @@ fn write_gltf(model: &const Model) -> %Buffer {
         j.end_array();
         j.prop("nodes");
         j.begin_array();
-        { var i:usize = 0; while (i != model.meshes.len) : (i += 1) {
+        { var i: usize = 0; while (i != model.meshes.len) : (i += 1) {
             const m = &model.meshes.items[i];
             j.begin_obj();
             j.prop("mesh");

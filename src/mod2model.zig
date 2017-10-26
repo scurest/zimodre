@@ -7,32 +7,8 @@ const Mod = mod.Mod;
 const byteorder = @import("byteorder.zig");
 
 error ValidateNotEnoughVertexData;
-error ValidateNotEnoughFaceData;
+error ValidateNotEnoughIndexData;
 error UnsupportedVertexSize;
-
-pub const AccessorFormat = enum {
-    F32F32,
-    F32F32F32,
-    U16,
-};
-
-pub const Accessor = struct {
-    buffer_start: usize,
-    buffer_end: usize,
-    count: u32,
-    format: AccessorFormat,
-    /// Only for position; minimum of each coordinate
-    /// (required by glTF).
-    min: ?[3]f32,
-    /// Only for position; maximum of each coordinate.
-    max: ?[3]f32,
-};
-
-pub const Mesh = struct {
-    positions: usize,
-    uvs: ?usize,
-    indices: usize,
-};
 
 /// Intermediate model representation that's very close to a glTF file.
 /// Should be really easy to emit a GLB once you have this.
@@ -56,6 +32,30 @@ pub const Model = struct {
         self.accessors.deinit();
         self.meshes.deinit();
     }
+};
+
+pub const AccessorFormat = enum {
+    F32F32,
+    F32F32F32,
+    U16,
+};
+
+pub const Accessor = struct {
+    buffer_start: usize,
+    buffer_end: usize,
+    count: u32,
+    format: AccessorFormat,
+    /// Only for position; minimum of each coordinate
+    /// (required by glTF).
+    min: ?[3]f32,
+    /// Only for position; maximum of each coordinate.
+    max: ?[3]f32,
+};
+
+pub const Mesh = struct {
+    positions: usize,
+    uvs: ?usize,
+    indices: usize,
 };
 
 pub fn convert(m: &const Mod) ->%Model {
@@ -161,6 +161,9 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
 
     const f_start = m.index_offset + 2 * mi.index_pos;
     const f_end = f_start + 2 * mi.index_count;
+    if (f_end > m.file.len) {
+        return error.ValidateNotEnoughIndexData;
+    }
     const index_data = m.file[f_start..f_end];
     const indices_start = model.buffer.len();
     { var i: usize = 0; while (i != mi.index_count) : (i += 1) {

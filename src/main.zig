@@ -137,16 +137,25 @@ fn print_error(err: error) {
                 "parser: file couldn't be understood as MOD\n");
         },
         error.CouldntOpenInputFile => {
-            %%o.printf("input file: Couldn't open for reading\n");
+            %%o.printf("input file: couldn't open for reading\n");
         },
         error.CouldntReadInputFile => {
-            %%o.printf("input file: Couldn't read file\n");
+            %%o.printf("input file: couldn't read file\n");
         },
         error.CouldntOpenOutputFile => {
-            %%o.printf("output file: Couldn't open for writing\n");
+            %%o.printf("output file: couldn't open for writing\n");
         },
         error.CouldntWriteOutputFile => {
-            %%o.printf("output file: Couldn't write file\n");
+            %%o.printf("output file: couldn't write file\n");
+        },
+        error.ValidateNotEnoughVertexData => {
+            %%o.printf("validation: file asked for too much vertex data\n");
+        },
+        error.ValidateNotEnoughIndexData => {
+            %%o.printf("validation: file asked for too much index data\n");
+        },
+        error.UnsupportedVertexSize => {
+            %%o.printf("unimplemented: unsupported vertex format in MOD file\n");
         },
         else => {
             %%o.printf("error: nonspecific error -- everyone's favorite kind :)\n");
