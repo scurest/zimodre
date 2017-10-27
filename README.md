@@ -11,5 +11,5 @@ in this directory.
 
 ### TODO
 
-- [ ] More vertex formats
+- [x] More vertex formats
 - [ ] Bones

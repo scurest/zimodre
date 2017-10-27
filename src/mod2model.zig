@@ -83,21 +83,28 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
     }
     const data = m.file[v_start..v_end];
 
-    if (mi.vertex_size != 28) {
+    const sz = mi.vertex_size;
+    if (sz != 24 and sz != 28 and sz != 32 and sz != 36) {
         return error.UnsupportedVertexSize;
     }
 
     // Vertex format is
-    //  - x: f32, // position
-    //  - y: f32,
-    //  - z: f32,
-    //  - ?: f32, // ?
-    //  - u: f32, // texture coordinates
-    //  - v: f32,
-    //  - bone1: u8, // bone indices
-    //  - bone2: u8,
-    //  - weight1: u8 normalized, // bone weights
-    //  - weight2: u8 normalized,
+    //
+    // - x: f32,
+    // - y: f32,
+    // - z: f32,
+    // - ?: [4]u8,
+    // - u: f32,
+    // - v: f32,
+    // - bone1: u8, // below here only if sz >= 28
+    // - bone2: u8,
+    // - weight1: u8 normalized,
+    // - weight2: u8 normalized,
+    // - ?: [4]u8, // below here only if sz >= 32
+    // - bone3: u8, // below here only if sx >= 36
+    // - bone4: u8,
+    // - weight3: u8 normalized,
+    // - weight4: u8 normalized,
 
     //TODO we know all the sizes in advance; resize at the beginning
     // and make one pass copying the data over.
@@ -105,7 +112,7 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
     var min: ?[3]f32 = null;
     var max: ?[3]f32 = null;
     { var i: usize = 0; while (i != mi.vertex_count) : (i += 1) {
-        const attrib = data[28*i..28*(i+1)];
+        const attrib = data[sz*i..sz*(i+1)];
         const xyz = attrib[0..12];
         %%model.buffer.append(xyz);
 
@@ -132,7 +139,7 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
 
     const uvs_start = model.buffer.len();
     { var i: usize = 0; while (i != mi.vertex_count) : (i += 1) {
-        const attrib = data[28*i..28*(i+1)];
+        const attrib = data[sz*i..sz*(i+1)];
         const uv = attrib[16..24];
         %%model.buffer.append(uv);
     }}
