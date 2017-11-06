@@ -123,15 +123,15 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
         const z = byteorder.read_f32(xyz[8..12]);
         if (min) |*v| {
             if (x < (*v)[0]) { (*v)[0] = x; }
-            else if (y < (*v)[1]) { (*v)[1] = y; }
-            else if (z < (*v)[2]) { (*v)[2] = z; }
+            if (y < (*v)[1]) { (*v)[1] = y; }
+            if (z < (*v)[2]) { (*v)[2] = z; }
         } else {
             min = []f32 {x, y, z};
         }
         if (max) |*v| {
             if (x > (*v)[0]) { (*v)[0] = x; }
-            else if (y > (*v)[1]) { (*v)[1] = y; }
-            else if (z > (*v)[2]) { (*v)[2] = z; }
+            if (y > (*v)[1]) { (*v)[1] = y; }
+            if (z > (*v)[2]) { (*v)[2] = z; }
         } else {
             max = []f32 {x, y, z};
         }
