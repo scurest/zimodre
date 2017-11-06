@@ -74,7 +74,8 @@ pub const Parser = struct {
 
     pub fn log(self: &Parser, comptime format: []const u8, args: ...) {
         if (!self.logging_on) { return; }
-        %%io.stdout.printf(format, args);
+        var stderr = %%io.getStdErr();
+        %%stderr.out_stream.print(format, args);
     }
 
     pub fn warn(self: &Parser, comptime format: []const u8, args: ...) {

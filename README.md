@@ -8,7 +8,7 @@ Based on [this 3DS Max script](https://pastebin.com/EafXb2ZU) by zaramot who rev
 
 ### Building
 
-Install [zig](http://ziglang.org/) (I'm using commit hash 6663638) and run `zig build`
+Install [zig](http://ziglang.org/) (I'm using commit hash f0dafd3f) and run `zig build`
 in this directory.
 
 ### TODO

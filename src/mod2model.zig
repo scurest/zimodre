@@ -1,6 +1,7 @@
-const mem = @import("std").mem;
 const ArrayList = @import("std").ArrayList;
 const Buffer = @import("std").Buffer;
+
+const allocator = &@import("std").heap.c_allocator;
 
 const mod = @import("mod.zig");
 const Mod = mod.Mod;
@@ -21,9 +22,9 @@ pub const Model = struct {
 
     pub fn init() -> Model {
         Model {
-            .buffer = %%Buffer.initSize(&mem.c_allocator, 0),
-            .accessors = ArrayList.init(&mem.c_allocator),
-            .meshes = ArrayList.init(&mem.c_allocator),
+            .buffer = %%Buffer.initSize(allocator, 0),
+            .accessors = ArrayList.init(allocator),
+            .meshes = ArrayList.init(allocator),
         }
     }
 
@@ -60,9 +61,9 @@ pub const Mesh = struct {
 
 pub fn convert(m: &const Mod) ->%Model {
     var model = Model {
-        .buffer = %%Buffer.initSize(&mem.c_allocator, 0),
-        .accessors = ArrayList(Accessor).init(&mem.c_allocator),
-        .meshes = ArrayList(Mesh).init(&mem.c_allocator),
+        .buffer = %%Buffer.initSize(allocator, 0),
+        .accessors = ArrayList(Accessor).init(allocator),
+        .meshes = ArrayList(Mesh).init(allocator),
     };
     %defer model.deinit();
 

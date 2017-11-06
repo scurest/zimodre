@@ -1,5 +1,6 @@
-const std = @import("std");
-const Buffer = std.Buffer;
+const Buffer = @import("std").Buffer;
+
+const allocator = &@import("std").heap.c_allocator;
 
 const byteorder = @import("byteorder.zig");
 const Json = @import("json.zig").Json;
@@ -22,7 +23,7 @@ pub fn write_glb(model: &const Model) -> %Buffer {
         model.buffer.len(); // BIN payload len
 
 
-    var glb = %%Buffer.initSize(&std.mem.c_allocator, 0);
+    var glb = %%Buffer.initSize(allocator, 0);
     %defer glb.deinit();
 
     // Header
@@ -44,7 +45,7 @@ pub fn write_glb(model: &const Model) -> %Buffer {
 }
 
 fn write_gltf(model: &const Model) -> %Buffer {
-    var b = %%Buffer.initSize(&std.mem.c_allocator, 0);
+    var b = %%Buffer.initSize(allocator, 0);
     %defer b.deinit();
 
     var j = Json.new(&b);
@@ -122,7 +123,7 @@ fn write_gltf(model: &const Model) -> %Buffer {
     if (model.meshes.len != 0) {
         j.prop("meshes");
         j.begin_array();
-        { var i:usize = 0; while (i != model.meshes.len) : (i += 1) {
+        { var i: usize = 0; while (i != model.meshes.len) : (i += 1) {
             const m = &model.meshes.items[i];
             j.begin_obj();
             j.prop("primitives");

@@ -3,9 +3,8 @@
 const std = @import("std");
 const Buffer = std.Buffer;
 
-fn buf_fmt_output(b: &Buffer, out: []const u8) -> bool {
-    b.append(out) %% return false;
-    true
+fn buf_fmt_output(b: &Buffer, out: []const u8) -> %void {
+    b.append(out)
 }
 
 fn buf_fmt(b: &Buffer, comptime fmt: []const u8, args: ...) {

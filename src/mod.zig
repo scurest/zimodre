@@ -3,6 +3,8 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 
+const allocator = &std.heap.c_allocator;
+
 const parser = @import("parser.zig");
 const Parser = parser.Parser;
 
@@ -39,7 +41,7 @@ pub fn parse(ctx: &Parser) -> %Mod {
     ctx.end();
 
 
-    var meshes = ArrayList(MeshInfo).init(&std.mem.c_allocator);
+    var meshes = ArrayList(MeshInfo).init(allocator);
     %defer meshes.deinit();
 
     ctx.pos = item_offset;
