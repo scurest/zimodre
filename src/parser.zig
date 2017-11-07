@@ -25,50 +25,50 @@ pub const Parser = struct {
         self.log("------\n");
     }
 
-    pub fn check_size(self: &Parser, count: usize) -> %void {
+    pub fn checkSize(self: &Parser, count: usize) -> %void {
         if (self.pos + count > self.buffer.len) {
             return error.ParseErrorUnexpectedEOF;
         }
     }
 
-    fn check_alignment(self: &Parser, align_to: usize) {
+    fn checkAlignment(self: &Parser, align_to: usize) {
         if (self.pos % align_to != 0) {
             self.warn("expected 0x{x} to be aligned to {} bytes\n",
                 self.pos, align_to);
         }
     }
 
-    pub fn next_n_bytes(self: &Parser, n: usize) -> %[]const u8 {
-        %return self.check_size(n);
+    pub fn nextNBytes(self: &Parser, n: usize) -> %[]const u8 {
+        %return self.checkSize(n);
         const p = self.pos;
         self.pos += n;
         self.buffer[p..p+n]
     }
 
-    pub fn next_n(self: &Parser, comptime T: type, n: usize, name: []const u8) -> %View(T) {
+    pub fn nextN(self: &Parser, comptime T: type, n: usize, name: []const u8) -> %View(T) {
         self.log("===read {} at 0x{x} ({}*{}) ", name, self.pos, @typeName(T), n);
         defer self.log("\n");
 
         const buffer =
             if (T == u8) {
-                %return self.next_n_bytes(n)
+                %return self.nextNBytes(n)
             } else if (T == u16) {
-                self.check_alignment(2);
-                %return self.next_n_bytes(2*n)
+                self.checkAlignment(2);
+                %return self.nextNBytes(2*n)
             } else if (T == u32) {
-                self.check_alignment(4);
-                %return self.next_n_bytes(4*n)
+                self.checkAlignment(4);
+                %return self.nextNBytes(4*n)
             } else {
                 @compileError("unsupported type: " ++ @typeName(T));
             };
 
         const result = View(T) { .buffer = buffer };
-        log_view(self, T, &result);
+        logView(self, T, &result);
         result
     }
 
     pub fn next(self: &Parser, comptime T: type, name: []const u8) -> %T {
-        const view = %return self.next_n(T, 1, name);
+        const view = %return self.nextN(T, 1, name);
         view.nth(0)
     }
 
@@ -101,9 +101,9 @@ pub fn View(comptime T: type) -> type {
             if (T == u8) {
                 self.buffer[n]
             } else if (T == u16) {
-                byteorder.read_u16(self.buffer[2*n..2*n+2])
+                byteorder.readU16(self.buffer[2*n..2*n+2])
             } else if (T == u32) {
-                byteorder.read_u32(self.buffer[4*n..4*n+4])
+                byteorder.readU32(self.buffer[4*n..4*n+4])
             } else {
                 @compileError("unsupported type: " ++ @typeName(T));
             }
@@ -111,7 +111,7 @@ pub fn View(comptime T: type) -> type {
     }
 }
 
-fn log_view(ctx: &Parser, comptime T: type, view: &const View(T)) {
+fn logView(ctx: &Parser, comptime T: type, view: &const View(T)) {
     // Show at most 10 elements so we don't print huge binary blobs.
     const view_len = view.len();
     const num = if (view_len > 10) { 8 } else { view_len };

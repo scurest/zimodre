@@ -16,7 +16,7 @@ error CouldntWriteOutputFile;
 
 pub fn main() -> %void {
     main2() %% |err| {
-        print_error(err);
+        printError(err);
         return err;
     };
 }
@@ -73,7 +73,7 @@ fn main2() -> %void {
 
     // Do the conversion
 
-    var input_file = %return read_file(in_path.toSliceConst());
+    var input_file = %return readFile(in_path.toSliceConst());
     defer input_file.deinit();
 
     var parser = Parser.new(input_file.toSliceConst());
@@ -84,16 +84,16 @@ fn main2() -> %void {
     var model = %return mod2model.convert(&mod_file);
     defer model.deinit();
 
-    var glb_buffer = %return gltf.write_glb(&model);
+    var glb_buffer = %return gltf.writeGlb(&model);
     defer glb_buffer.deinit();
 
     if (!dry_run) {
-        %return write_file(out_path.toSliceConst(), glb_buffer.toSlice());
+        %return writeFile(out_path.toSliceConst(), glb_buffer.toSlice());
     }
 }
 
 /// Read a whole file into a Buffer.
-fn read_file(path: []const u8) -> %Buffer {
+fn readFile(path: []const u8) -> %Buffer {
     var buffer = Buffer.initNull(allocator);
     %defer buffer.deinit();
 
@@ -107,12 +107,12 @@ fn read_file(path: []const u8) -> %Buffer {
     buffer
 }
 
-fn write_file(path: []const u8, contents: []const u8) -> %void {
+fn writeFile(path: []const u8, contents: []const u8) -> %void {
     std.io.writeFile(path, contents, allocator)
         %% return error.CouldntWriteOutputFile;
 }
 
-fn print_error(err: error) {
+fn printError(err: error) {
     var stderr = %%std.io.getStdErr();
     var o = &stderr.out_stream;
     switch (err) {

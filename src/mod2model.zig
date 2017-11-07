@@ -68,13 +68,13 @@ pub fn convert(m: &const Mod) ->%Model {
     %defer model.deinit();
 
     { var i: usize = 0; while (i != m.mesh_info.len) : (i += 1) {
-        %return convert_mesh(&model, m, i);
+        %return convertMesh(&model, m, i);
     }}
 
     model
 }
 
-fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
+fn convertMesh(model: &Model, m: &const Mod, id: usize) -> %void {
     const mi = &m.mesh_info.items[id];
 
     const v_start = m.vertex_offset + mi.vertex_size * u32(mi.vertex_start);
@@ -118,9 +118,9 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
         %%model.buffer.append(xyz);
 
         // Find min/max
-        const x = byteorder.read_f32(xyz[0..4]);
-        const y = byteorder.read_f32(xyz[4..8]);
-        const z = byteorder.read_f32(xyz[8..12]);
+        const x = byteorder.readF32(xyz[0..4]);
+        const y = byteorder.readF32(xyz[4..8]);
+        const z = byteorder.readF32(xyz[8..12]);
         if (min) |*v| {
             if (x < (*v)[0]) { (*v)[0] = x; }
             if (y < (*v)[1]) { (*v)[1] = y; }
@@ -176,8 +176,8 @@ fn convert_mesh(model: &Model, m: &const Mod, id: usize) -> %void {
     const indices_start = model.buffer.len();
     { var i: usize = 0; while (i != mi.index_count) : (i += 1) {
         const index =
-            byteorder.read_u16(index_data[2*i..2*i+2]) - u16(mi.vertex_start);
-        %%byteorder.write_u16(&model.buffer, index);
+            byteorder.readU16(index_data[2*i..2*i+2]) - u16(mi.vertex_start);
+        %%byteorder.writeU16(&model.buffer, index);
     }}
     const indices_end = model.buffer.len();
 
